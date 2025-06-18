@@ -6,10 +6,6 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/manifest.json',
-        destination: '/public/manifest.json',
-      },
-      {
         source: '/sw.js',
         destination: '/public/sw.js',
       },
