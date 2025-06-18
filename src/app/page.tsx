@@ -12,7 +12,7 @@ import { formatCurrency, formatDate } from "@/lib/timeUtils"
 import { calculateEarningsForPeriod } from "@/lib/pdfUtils"
 
 export default function Home() {
-  const { workLogs } = useAppStore()
+  const { workLogs, isHydrated } = useAppStore()
   const [showEarningsCalculator, setShowEarningsCalculator] = useState(false)
   const [startDate, setStartDate] = useState<Date | undefined>(undefined)
   const [endDate, setEndDate] = useState<Date | undefined>(undefined)
@@ -32,6 +32,14 @@ export default function Home() {
     
     setTodayEarnings(calculateEarningsForPeriod(workLogs, today, todayEnd))
   }, [workLogs])
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+      </div>
+    )
+  }
 
   const calculatePeriodEarnings = () => {
     if (!startDate || !endDate) return

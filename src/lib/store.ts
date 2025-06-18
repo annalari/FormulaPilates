@@ -16,28 +16,49 @@ type Actions = {
   setHydrated: () => void
 }
 
-// Create the store without persist for now to avoid hydration issues
-export const useAppStore = create<State & Actions>()((set) => ({
-  workLogs: [],
-  experimentals: [],
-  isHydrated: true, // Set to true to avoid loading screen
-  setHydrated: () => set({ isHydrated: true }),
-  addWorkLog: (log: WorkLog) =>
-    set((state) => ({
-      workLogs: [...state.workLogs, log],
-    })),
-  addExperimental: (exp: Experimental) =>
-    set((state) => ({
-      experimentals: [...state.experimentals, exp],
-    })),
-  clearWorkLogs: () =>
-    set((state) => ({
-      ...state,
+export const useAppStore = create<State & Actions>()(
+  persist(
+    (set) => ({
       workLogs: [],
-    })),
-  clearExperimentals: () =>
-    set((state) => ({
-      ...state,
       experimentals: [],
-    })),
-}))
+      isHydrated: false,
+      setHydrated: () => set({ isHydrated: true }),
+      addWorkLog: (log: WorkLog) =>
+        set((state) => ({
+          workLogs: [...state.workLogs, log],
+        })),
+      addExperimental: (exp: Experimental) =>
+        set((state) => ({
+          experimentals: [...state.experimentals, exp],
+        })),
+      clearWorkLogs: () =>
+        set((state) => ({
+          ...state,
+          workLogs: [],
+        })),
+      clearExperimentals: () =>
+        set((state) => ({
+          ...state,
+          experimentals: [],
+        })),
+    }),
+    {
+      name: 'formula-pilates-storage',
+      storage: createJSONStorage(() => {
+        if (typeof window !== 'undefined') {
+          return localStorage
+        }
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        }
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHydrated()
+        }
+      },
+    }
+  )
+)

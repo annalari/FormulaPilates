@@ -1,0 +1,16 @@
+{
+  "name": "formula-pilates",
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/manifest.json",
+      "dest": "/api/manifest.json"
+    }
+  ]
+}
