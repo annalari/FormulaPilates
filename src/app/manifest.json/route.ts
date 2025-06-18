@@ -9,14 +9,14 @@ export async function GET() {
   
   return new NextResponse(
     JSON.stringify({
-      name: "Fórmula Pilates",
-      short_name: "Pilates",
-      description: "Aplicativo para registro de horas e experimentais",
+      name: "Fórmula Pilates & Fitness",
+      short_name: "Fórmula Pilates",
+      description: "Aplicativo para registro de horas e experimentais - Fórmula Pilates & Fitness",
       start_url: "/",
       id: "/",
       display: "standalone",
       display_override: ["window-controls-overlay"],
-      background_color: "#ffffff",
+      background_color: "#000000",
       theme_color: "#000000",
       icons: [
         {
@@ -33,7 +33,7 @@ export async function GET() {
         }
       ],
       orientation: "portrait",
-      categories: ["productivity", "utilities"],
+      categories: ["productivity", "utilities", "health"],
       prefer_related_applications: false,
       shortcuts: [
         {

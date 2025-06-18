@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { registerServiceWorker, initInstallPrompt, installApp } from "@/lib/pwaUtils"
 import { Button } from "@/components/ui/button"
 
@@ -32,18 +33,23 @@ export function Header() {
   }
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/">
-          <h1 className="text-2xl font-semibold bg-gradient-to-r from-black to-red-600 bg-clip-text text-transparent hover:from-black hover:to-red-700 transition-all cursor-pointer">
-            Fórmula Pilates
-          </h1>
+    <header className="bg-black border-b border-gray-800">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <Link href="/" className="hover:opacity-80 transition-opacity">
+          <Image
+            src="/formula-pilates-logo.png"
+            alt="Fórmula Pilates & Fitness"
+            width={200}
+            height={60}
+            className="h-12 w-auto"
+            priority
+          />
         </Link>
         {isClient && canInstall && (
           <Button 
             variant="outline" 
             onClick={handleInstall}
-            className="text-sm"
+            className="text-sm border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
           >
             Instalar App
           </Button>
