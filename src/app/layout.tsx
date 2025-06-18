@@ -1,5 +1,7 @@
 import { Inter } from "next/font/google"
 import { Header } from "@/components/Header"
+import { ClientWrapper } from "@/components/ClientWrapper"
+import { ToasterProvider } from "@/components/ToasterProvider"
 import { metadata } from "./metadata"
 import { viewport } from "./viewport"
 import "./globals.css"
@@ -19,9 +21,12 @@ export default function RootLayout({
         <div className="min-h-screen bg-gray-50">
           <Header />
           <main className="container mx-auto px-4 py-8">
-            {children}
+            <ClientWrapper>
+              {children}
+            </ClientWrapper>
           </main>
         </div>
+        <ToasterProvider />
       </body>
     </html>
   )

@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import { Card } from "./ui/card"
-import { useAppStore } from "@/lib/store"
+import { useSimpleStore } from "@/lib/simpleStore"
 import { Input } from "./ui/input"
 import { Button } from "./ui/button"
 import { Switch } from "./ui/switch"
 import { Label } from "./ui/label"
-import { Alert } from "./ui/alert"
 import { Separator } from "./ui/separator"
+import { toast } from "sonner"
 import { calculateHours, formatCurrency, formatTime, type WorkLog, type Experimental } from "@/lib/timeUtils"
 
 export function HoursLogForm() {
@@ -17,12 +17,14 @@ export function HoursLogForm() {
   const [experimentalTime, setExperimentalTime] = useState("")
   const [patientName, setPatientName] = useState("")
   const [closedPackage, setClosedPackage] = useState(false)
-  const [error, setError] = useState("")
-  const { workLogs, experimentals, addWorkLog, addExperimental } = useAppStore()
+  const workLogs = useSimpleStore((state) => state.workLogs)
+  const experimentals = useSimpleStore((state) => state.experimentals)
+  const addWorkLog = useSimpleStore((state) => state.addWorkLog)
+  const addExperimental = useSimpleStore((state) => state.addExperimental)
 
   const handleLogHours = () => {
     if (!startTime || !endTime) {
-      setError("Por favor, preencha os horários de início e fim.")
+      showToast("error", "Por favor, preencha os horários de início e fim.")
       return
     }
 
@@ -31,7 +33,7 @@ export function HoursLogForm() {
     const [endHours, endMinutes] = endTime.split(':').map(Number)
     
     if (isNaN(startHours) || isNaN(startMinutes) || isNaN(endHours) || isNaN(endMinutes)) {
-      setError("Horários inválidos. Use o formato HH:mm.")
+      showToast("error", "Horários inválidos. Use o formato HH:mm.")
       return
     }
     
@@ -42,7 +44,7 @@ export function HoursLogForm() {
     end.setHours(endHours, endMinutes, 0, 0)
 
     if (end <= start) {
-      setError("O horário de fim deve ser posterior ao horário de início.")
+      showToast("error", "O horário de fim deve ser posterior ao horário de início.")
       return
     }
 
@@ -58,22 +60,40 @@ export function HoursLogForm() {
       earnings,
     }
 
-    addWorkLog(newLog)
-    setStartTime("")
-    setEndTime("")
-    setError("")
+    try {
+      addWorkLog(newLog)
+      setStartTime("")
+      setEndTime("")
+      showToast("success", "Horas registradas com sucesso!")
+    } catch (error) {
+      showToast("error", "Erro ao salvar os dados. Tente novamente.")
+    }
+  }
+
+  const showToast = (type: "success" | "error", message: string) => {
+    try {
+      if (type === "success") {
+        toast.success(message)
+      } else {
+        toast.error(message)
+      }
+    } catch (error) {
+      if (type === "error") {
+        alert(message)
+      }
+    }
   }
 
   const handleAddExperimental = () => {
     if (!experimentalTime || !patientName) {
-      setError("Por favor, preencha o horário e nome do paciente para o Experimental.")
+      showToast("error", "Por favor, preencha o horário e nome do paciente para o Experimental.")
       return
     }
 
     const [hours, minutes] = experimentalTime.split(':').map(Number)
     
     if (isNaN(hours) || isNaN(minutes)) {
-      setError("Horário inválido. Use o formato HH:mm.")
+      showToast("error", "Horário inválido. Use o formato HH:mm.")
       return
     }
     
@@ -88,11 +108,15 @@ export function HoursLogForm() {
       closedPackage,
     }
 
-    addExperimental(newExperimental)
-    setExperimentalTime("")
-    setPatientName("")
-    setClosedPackage(false)
-    setError("")
+    try {
+      addExperimental(newExperimental)
+      setExperimentalTime("")
+      setPatientName("")
+      setClosedPackage(false)
+      showToast("success", "Experimental adicionado com sucesso!")
+    } catch (error) {
+      showToast("error", "Erro ao salvar os dados. Tente novamente.")
+    }
   }
 
   return (
@@ -161,22 +185,16 @@ export function HoursLogForm() {
         </div>
       </Card>
 
-      {error && (
-        <Alert variant="destructive">
-          {error}
-        </Alert>
-      )}
-
       {workLogs.length > 0 && (
         <Card className="p-6 shadow-md hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold mb-4 text-gray-800">Registros do Dia</h2>
           <div className="space-y-4">
             {workLogs.map((log) => (
               <div key={log.id} className="p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <p>Início: {formatTime(log.startTime)}</p>
-                <p>Fim: {formatTime(log.endTime)}</p>
-                <p>Total de Horas: {log.hours}</p>
-                <p>Valor: {formatCurrency(log.earnings)}</p>
+                <p suppressHydrationWarning>Início: {formatTime(log.startTime)}</p>
+                <p suppressHydrationWarning>Fim: {formatTime(log.endTime)}</p>
+                <p suppressHydrationWarning>Total de Horas: {log.hours}</p>
+                <p suppressHydrationWarning>Valor: {formatCurrency(log.earnings)}</p>
               </div>
             ))}
           </div>
@@ -189,9 +207,9 @@ export function HoursLogForm() {
           <div className="space-y-4">
             {experimentals.map((exp) => (
               <div key={exp.id} className="p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <p>Horário: {formatTime(exp.time)}</p>
-                <p>Paciente: {exp.patientName}</p>
-                <p>Fechou pacote: {exp.closedPackage ? "Sim" : "Não"}</p>
+                <p suppressHydrationWarning>Horário: {formatTime(exp.time)}</p>
+                <p suppressHydrationWarning>Paciente: {exp.patientName}</p>
+                <p suppressHydrationWarning>Fechou pacote: {exp.closedPackage ? "Sim" : "Não"}</p>
               </div>
             ))}
           </div>
