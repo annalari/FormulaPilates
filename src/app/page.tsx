@@ -67,39 +67,58 @@ export default function Home() {
       {showEarningsCalculator && (
         <Card className="p-6">
           <h3 className="text-lg font-medium mb-4">Calcular Ganhos por Período</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <Label>Data Inicial</Label>
-              <div className="rounded-lg border shadow-sm p-3 bg-white">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  className="rounded-md"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Data Final</Label>
-              <div className="rounded-lg border shadow-sm p-3 bg-white">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  className="rounded-md"
-                />
-              </div>
+          <div className="space-y-2">
+            <Label className="text-center block">Selecione o Período</Label>
+            <div className="rounded-lg border shadow-sm p-3 bg-white flex justify-center">
+              <Calendar
+                mode="range"
+                selected={{
+                  from: startDate,
+                  to: endDate
+                }}
+                onSelect={(range) => {
+                  setStartDate(range?.from)
+                  setEndDate(range?.to)
+                }}
+                numberOfMonths={1}
+                className="rounded-md"
+                modifiers={{
+                  today: new Date()
+                }}
+                modifiersStyles={{
+                  today: {
+                    fontWeight: "bold",
+                    backgroundColor: "#ffcdd2"
+                  }
+                }}
+              />
             </div>
           </div>
-          <Button 
-            onClick={calculatePeriodEarnings} 
-            className="mt-4"
-            disabled={!startDate || !endDate}
-          >
-            Calcular
-          </Button>
-          {periodEarnings !== null && (
+          <div className="flex gap-2 mt-4">
+            <Button 
+              onClick={calculatePeriodEarnings} 
+              disabled={!startDate || !endDate}
+            >
+              Calcular
+            </Button>
+            {(startDate || endDate) && (
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setStartDate(undefined)
+                  setEndDate(undefined)
+                  setPeriodEarnings(null)
+                }}
+              >
+                Limpar Filtro
+              </Button>
+            )}
+          </div>
+          {periodEarnings !== null && startDate && endDate && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">
+                Período: {formatDate(startDate)} até {formatDate(endDate)}
+              </p>
               <p className="text-lg">
                 Total no período: <span className="font-bold">{formatCurrency(periodEarnings)}</span>
               </p>

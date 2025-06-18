@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Calendar Range Styling */
+.rdp-day_range_start:not(.rdp-day_range_end),
+.rdp-day_range_end:not(.rdp-day_range_start) {
+  border-radius: 0.5rem !important;
+}
+
+.rdp-day_range_middle {
+  border-radius: 0 !important;
+  background-color: rgb(254 226 226) !important;
+  color: rgb(185 28 28) !important;
+}
+
+.rdp-day_selected {
+  background-color: rgb(239 68 68) !important;
+  color: white !important;
+}
+
+.rdp-day_range_start,
+.rdp-day_range_end {
+  background-color: rgb(239 68 68) !important;
+  color: white !important;
+}
+
+.rdp-day:hover:not(.rdp-day_selected) {
+  background-color: rgb(254 226 226) !important;
+  color: rgb(185 28 28) !important;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
