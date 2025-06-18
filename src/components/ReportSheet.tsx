@@ -68,34 +68,53 @@ export function ReportSheet() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <Card className="p-6 shadow-md hover:shadow-lg transition-shadow">
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Gerar Relatório</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-2">
-            <Label className="text-gray-700">Data Inicial</Label>
-            <div className="rounded-lg border shadow-sm p-3 bg-white">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                className="rounded-md"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-gray-700">Data Final</Label>
-            <div className="rounded-lg border shadow-sm p-3 bg-white">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                className="rounded-md"
-              />
-            </div>
+        <div className="space-y-2">
+          <Label className="text-gray-700 text-center block">Selecione o Período</Label>
+          <div className="rounded-lg border shadow-sm p-3 bg-white flex justify-center">
+            <Calendar
+              mode="range"
+              selected={{
+                from: startDate,
+                to: endDate
+              }}
+              onSelect={(range) => {
+                setStartDate(range?.from)
+                setEndDate(range?.to)
+              }}
+              numberOfMonths={1}
+              className="rounded-md"
+              modifiers={{
+                today: new Date()
+              }}
+              modifiersStyles={{
+                today: {
+                  fontWeight: "bold",
+                  backgroundColor: "#ffcdd2"
+                }
+              }}
+            />
           </div>
         </div>
         <div className="flex flex-wrap gap-2 mt-6">
           <Button onClick={generateReport} className="w-full md:w-auto">
             Gerar Relatório
           </Button>
+          {(startDate || endDate) && (
+            <Button 
+              variant="outline"
+              onClick={() => {
+                setStartDate(undefined)
+                setEndDate(undefined)
+                setShowReport(false)
+                setFilteredLogs([])
+                setFilteredExperimentals([])
+                setError("")
+              }}
+              className="w-full md:w-auto"
+            >
+              Limpar Filtro
+            </Button>
+          )}
           {showReport && (
             <Button 
               onClick={() => generatePDF(filteredLogs, filteredExperimentals, startDate!, endDate!)}
