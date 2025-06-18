@@ -1,11 +1,12 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { WorkLog, Experimental } from './timeUtils'
 
 type State = {
   workLogs: WorkLog[]
   experimentals: Experimental[]
   isHydrated: boolean
+  error: string | null
 }
 
 type Actions = {
@@ -14,6 +15,7 @@ type Actions = {
   clearWorkLogs: () => void
   clearExperimentals: () => void
   setHydrated: () => void
+  setError: (error: string | null) => void
 }
 
 export const useAppStore = create<State & Actions>()(
@@ -22,43 +24,38 @@ export const useAppStore = create<State & Actions>()(
       workLogs: [],
       experimentals: [],
       isHydrated: false,
+      error: null,
       setHydrated: () => set({ isHydrated: true }),
-      addWorkLog: (log: WorkLog) =>
+      setError: (error) => set({ error }),
+      addWorkLog: (log: WorkLog) => {
         set((state) => ({
           workLogs: [...state.workLogs, log],
-        })),
-      addExperimental: (exp: Experimental) =>
+          error: null
+        }))
+      },
+      addExperimental: (exp: Experimental) => {
         set((state) => ({
           experimentals: [...state.experimentals, exp],
-        })),
-      clearWorkLogs: () =>
+          error: null
+        }))
+      },
+      clearWorkLogs: () => {
         set((state) => ({
           ...state,
           workLogs: [],
-        })),
-      clearExperimentals: () =>
+          error: null
+        }))
+      },
+      clearExperimentals: () => {
         set((state) => ({
           ...state,
           experimentals: [],
-        })),
+          error: null
+        }))
+      }
     }),
     {
       name: 'formula-pilates-storage',
-      storage: createJSONStorage(() => {
-        if (typeof window !== 'undefined') {
-          return localStorage
-        }
-        return {
-          getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {},
-        }
-      }),
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          state.setHydrated()
-        }
-      },
     }
   )
 )

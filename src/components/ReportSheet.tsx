@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "./ui/card"
-import { useAppStore } from "@/lib/store"
+import { useSimpleStore } from "@/lib/simpleStore"
 import { Button } from "./ui/button"
 import { Calendar } from "./ui/calendar"
 import { Label } from "./ui/label"
@@ -12,7 +12,8 @@ import { formatDate, formatTime, formatCurrency, isValidDate, type WorkLog, type
 import { generatePDF } from "@/lib/pdfUtils"
 
 export function ReportSheet() {
-  const { workLogs, experimentals } = useAppStore()
+  const workLogs = useSimpleStore((state) => state.workLogs)
+  const experimentals = useSimpleStore((state) => state.experimentals)
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [error, setError] = useState("")
@@ -135,7 +136,7 @@ export function ReportSheet() {
 
       {showReport && (
         <Card className="p-6 shadow-md hover:shadow-lg transition-shadow">
-          <h2 className="text-xl font-semibold mb-6 text-gray-800">
+          <h2 className="text-xl font-semibold mb-6 text-gray-800" suppressHydrationWarning>
             Relatório: {startDate && formatDate(startDate)} - {endDate && formatDate(endDate)}
           </h2>
 
@@ -155,10 +156,10 @@ export function ReportSheet() {
                   <TableBody>
                     {filteredLogs.map((log) => (
                       <TableRow key={log.id} className="hover:bg-gray-50 transition-colors">
-                        <TableCell>{formatDate(log.date)}</TableCell>
-                        <TableCell>{formatTime(log.startTime)}</TableCell>
-                        <TableCell>{formatTime(log.endTime)}</TableCell>
-                        <TableCell>{log.hours}</TableCell>
+                        <TableCell suppressHydrationWarning>{formatDate(log.date)}</TableCell>
+                        <TableCell suppressHydrationWarning>{formatTime(log.startTime)}</TableCell>
+                        <TableCell suppressHydrationWarning>{formatTime(log.endTime)}</TableCell>
+                        <TableCell suppressHydrationWarning>{log.hours}</TableCell>
                       </TableRow>
                     ))}
                     {filteredLogs.length === 0 && (
@@ -194,10 +195,10 @@ export function ReportSheet() {
                     <TableBody>
                       {filteredExperimentals.map((exp) => (
                         <TableRow key={exp.id} className="hover:bg-gray-50 transition-colors">
-                          <TableCell>{formatDate(exp.date)}</TableCell>
-                          <TableCell>{formatTime(exp.time)}</TableCell>
-                          <TableCell>{exp.patientName}</TableCell>
-                          <TableCell>{exp.closedPackage ? "Sim" : "Não"}</TableCell>
+                          <TableCell suppressHydrationWarning>{formatDate(exp.date)}</TableCell>
+                          <TableCell suppressHydrationWarning>{formatTime(exp.time)}</TableCell>
+                          <TableCell suppressHydrationWarning>{exp.patientName}</TableCell>
+                          <TableCell suppressHydrationWarning>{exp.closedPackage ? "Sim" : "Não"}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
