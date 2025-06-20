@@ -35,7 +35,12 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
     if (!isAuthenticated && !isPublicPath) {
       router.push('/login')
     } else if (isAuthenticated && isLoginPage) {
-      router.push('/')
+      // Redirect admin to /admin, regular users to /
+      if (user?.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/')
+      }
     } else if (user?.isFirstLogin && !isChangePasswordPage) {
       router.push('/change-password')
     }

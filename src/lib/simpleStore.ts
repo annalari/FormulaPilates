@@ -20,10 +20,16 @@ type Actions = {
 }
 
 // Safe localStorage operations
+const STORAGE_VERSION = '2.0.0'
+const STORAGE_PREFIX = 'formula-pilates'
+
+const getStorageKey = (key: string) => `${STORAGE_PREFIX}-${key}-v${STORAGE_VERSION}`
+
 const saveToStorage = (key: string, data: any) => {
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(key, JSON.stringify(data))
+      const storageKey = getStorageKey(key)
+      localStorage.setItem(storageKey, JSON.stringify(data))
     } catch (error) {
       console.error('Failed to save to localStorage:', error)
     }
@@ -33,9 +39,65 @@ const saveToStorage = (key: string, data: any) => {
 const loadFromStorage = (key: string) => {
   if (typeof window !== 'undefined') {
     try {
-      const item = localStorage.getItem(key)
-      console.log(`Loaded from localStorage key: ${key}`, item)
-      return item ? JSON.parse(item) : null
+      // Try to load from new versioned format first
+      const storageKey = getStorageKey(key)
+      const item = localStorage.getItem(storageKey)
+      
+      if (item) {
+        console.log(`Loaded from localStorage key: ${storageKey}`, item)
+        return JSON.parse(item)
+      }
+      
+      // If not found, try to load from old format and migrate
+      const oldKeys = [
+        `${STORAGE_PREFIX}-${key}`,
+        key,
+        `${STORAGE_PREFIX}-storage`
+      ]
+      
+      for (const oldKey of oldKeys) {
+        const oldData = localStorage.getItem(oldKey)
+        if (oldData) {
+          console.log(`Found data in old format: ${oldKey}`, oldData)
+          try {
+            let parsedData = JSON.parse(oldData)
+            
+            // Handle old persist format
+            if (oldKey === `${STORAGE_PREFIX}-storage` && parsedData.state) {
+              parsedData = parsedData.state
+            }
+            
+            // Migrate data to new format
+            if (key === 'workLogs' && Array.isArray(parsedData)) {
+              parsedData = parsedData.map((log: any) => ({
+                ...log,
+                userId: log.userId || '2', // Default to funcionario1's ID
+                date: new Date(log.date),
+                startTime: new Date(log.startTime),
+                endTime: new Date(log.endTime)
+              }))
+            } else if (key === 'experimentals' && Array.isArray(parsedData)) {
+              parsedData = parsedData.map((exp: any) => ({
+                ...exp,
+                date: new Date(exp.date),
+                time: new Date(exp.time)
+              }))
+            }
+            
+            // Save migrated data in new format
+            saveToStorage(key, parsedData)
+            
+            // Clean up old data
+            localStorage.removeItem(oldKey)
+            
+            return parsedData
+          } catch (error) {
+            console.error(`Failed to migrate data from ${oldKey}:`, error)
+          }
+        }
+      }
+      
+      return null
     } catch (error) {
       console.error('Failed to load from localStorage:', error)
       return null
@@ -57,26 +119,16 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
     console.log('loadFromStorage called')
     
     try {
-      // Try to load from new format first
-      let savedWorkLogs = loadFromStorage('formula-pilates-workLogs')
-      let savedExperimentals = loadFromStorage('formula-pilates-experimentals')
-      
-      // If not found, try to load from old persist format
-      if (!savedWorkLogs && !savedExperimentals) {
-        const oldData = loadFromStorage('formula-pilates-storage')
-        console.log('Old data loaded:', oldData)
-        
-        if (oldData && oldData.state) {
-          savedWorkLogs = oldData.state.workLogs
-          savedExperimentals = oldData.state.experimentals
-        }
-      }
+      // Load data using the new versioned storage system
+      let savedWorkLogs = loadFromStorage('workLogs')
+      let savedExperimentals = loadFromStorage('experimentals')
       
       // Convert date strings back to Date objects with error handling
       const workLogs = Array.isArray(savedWorkLogs) ? savedWorkLogs.map((log: any) => {
         try {
           return {
             ...log,
+            userId: log.userId || '2', // Default to funcionario1's ID if missing
             date: new Date(log.date),
             startTime: new Date(log.startTime),
             endTime: new Date(log.endTime)
@@ -116,7 +168,7 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
   addWorkLog: (log: WorkLog) => {
     set((state) => {
       const newWorkLogs = [...state.workLogs, log]
-      saveToStorage('formula-pilates-workLogs', newWorkLogs)
+      saveToStorage('workLogs', newWorkLogs)
       return { workLogs: newWorkLogs, isHydrated: true }
     })
   },
@@ -126,7 +178,7 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
       const updatedWorkLogs = state.workLogs.map(log =>
         log.id === updatedLog.id ? updatedLog : log
       )
-      saveToStorage('formula-pilates-workLogs', updatedWorkLogs)
+      saveToStorage('workLogs', updatedWorkLogs)
       return { workLogs: updatedWorkLogs }
     })
   },
@@ -134,7 +186,7 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
   deleteWorkLog: (id: string) => {
     set((state) => {
       const filteredWorkLogs = state.workLogs.filter(log => log.id !== id)
-      saveToStorage('formula-pilates-workLogs', filteredWorkLogs)
+      saveToStorage('workLogs', filteredWorkLogs)
       return { workLogs: filteredWorkLogs }
     })
   },
@@ -142,27 +194,32 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
   addExperimental: (exp: Experimental) => {
     set((state) => {
       const newExperimentals = [...state.experimentals, exp]
-      saveToStorage('formula-pilates-experimentals', newExperimentals)
+      saveToStorage('experimentals', newExperimentals)
       return { experimentals: newExperimentals, isHydrated: true }
     })
   },
   
   clearWorkLogs: () => {
     set({ workLogs: [] })
-    saveToStorage('formula-pilates-workLogs', [])
+    saveToStorage('workLogs', [])
   },
   
   clearExperimentals: () => {
     set({ experimentals: [] })
-    saveToStorage('formula-pilates-experimentals', [])
+    saveToStorage('experimentals', [])
   },
   
   clearAllData: () => {
     // Clear all localStorage data
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('formula-pilates-storage')
-      localStorage.removeItem('formula-pilates-workLogs')
-      localStorage.removeItem('formula-pilates-experimentals')
+      const oldKeys = [
+        'formula-pilates-storage',
+        'formula-pilates-workLogs',
+        'formula-pilates-experimentals',
+        getStorageKey('workLogs'),
+        getStorageKey('experimentals')
+      ]
+      oldKeys.forEach(key => localStorage.removeItem(key))
     }
     set({
       workLogs: [],

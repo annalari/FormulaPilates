@@ -13,6 +13,7 @@ import { Calendar } from "./ui/calendar"
 import { toast } from "sonner"
 import { calculateHours, formatCurrency, formatTime, type WorkLog, type Experimental } from "@/lib/timeUtils"
 import { EditWorkLogModal } from "./EditWorkLogModal"
+import { useAuth } from "@/lib/authStore"
 
 interface HoursLogFormProps {
   selectedDay?: Date
@@ -50,6 +51,7 @@ export function HoursLogForm({
   const updateWorkLog = useSimpleStore((state) => state.updateWorkLog)
   const deleteWorkLog = useSimpleStore((state) => state.deleteWorkLog)
   const addExperimental = useSimpleStore((state) => state.addExperimental)
+  const user = useAuth((state) => state.user)
 
   const resetForm = () => {
     setDate(new Date().toISOString().substring(0, 10))
@@ -102,6 +104,7 @@ export function HoursLogForm({
 
     const newLog: WorkLog = {
       id: editingLog?.id || Date.now().toString(),
+      userId: user?.id || '',
       date: new Date(date),
       startTime: start,
       endTime: end,
@@ -301,6 +304,11 @@ export function HoursLogForm({
           </div>
           <div className="space-y-4">
             {workLogs.filter(log => {
+              // First filter by current user
+              if (log.userId !== user?.id) {
+                return false
+              }
+              
               const logDate = new Date(log.date)
               
               // If we have date range filtering

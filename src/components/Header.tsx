@@ -54,7 +54,7 @@ export function Header() {
     <header className="bg-black border-b border-gray-800">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
-          <Link href="/" className="hover:opacity-80 transition-opacity">
+          <Link href={user?.role === 'admin' ? "/admin" : "/"} className="hover:opacity-80 transition-opacity">
             <Image
               src="/formula-pilates-logo.png"
               alt="Fórmula Pilates & Fitness"
@@ -64,30 +64,34 @@ export function Header() {
               priority
             />
           </Link>
-          <div className="hidden lg:block ml-4">
-            <Link href="/">
-              <Button variant="ghost" className="text-white hover:text-red-400">
-                Página inicial
-              </Button>
-            </Link>
-          </div>
+          {user && user.role !== 'admin' && (
+            <div className="hidden md:block ml-4">
+              <Link href="/">
+                <Button variant="ghost" className="text-white hover:text-red-400">
+                  Página inicial
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
         
         {/* Desktop Menu */}
-        <div className="hidden lg:flex items-center space-x-4">
+        <div className="hidden md:flex items-center space-x-4">
           {user?.role === 'admin' && (
             <Link href="/admin">
               <Button variant="ghost" className="text-white hover:text-red-400">
-                Gerenciar Usuários
+                Gerenciar Funcionários
               </Button>
             </Link>
           )}
           
-          <Link href="/report">
-            <Button variant="ghost" className="text-white hover:text-red-400">
-              Relatório
-            </Button>
-          </Link>
+          {user && user.role !== 'admin' && (
+            <Link href="/report">
+              <Button variant="ghost" className="text-white hover:text-red-400">
+                Relatório
+              </Button>
+            </Link>
+          )}
 
           {isClient && canInstall && (
             <Button 
@@ -116,7 +120,7 @@ export function Header() {
         </div>
 
         {/* Mobile Menu */}
-        <div className="lg:hidden">
+        <div className="md:hidden">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="text-white hover:text-red-400">
@@ -128,25 +132,29 @@ export function Header() {
                 <SheetTitle className="text-white text-xl">Menu</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col space-y-4 mt-8">
-                <Link href="/" onClick={closeMobileMenu}>
-                  <Button variant="ghost" className="w-full justify-start text-white hover:text-red-400">
-                    Página inicial
-                  </Button>
-                </Link>
+                {user && user.role !== 'admin' && (
+                  <Link href="/" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-white hover:text-red-400">
+                      Página inicial
+                    </Button>
+                  </Link>
+                )}
 
                 {user?.role === 'admin' && (
                   <Link href="/admin" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start text-white hover:text-red-400">
-                      Gerenciar Usuários
+                      Gerenciar Funcionários
                     </Button>
                   </Link>
                 )}
                 
-                <Link href="/report" onClick={closeMobileMenu}>
-                  <Button variant="ghost" className="w-full justify-start text-white hover:text-red-400">
-                    Relatório
-                  </Button>
-                </Link>
+                {user && user.role !== 'admin' && (
+                  <Link href="/report" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-white hover:text-red-400">
+                      Relatório
+                    </Button>
+                  </Link>
+                )}
 
                 {isClient && canInstall && (
                   <Button 

@@ -68,9 +68,18 @@ export default function Home() {
     if (user?.isFirstLogin) {
       router.push("/change-password")
     }
+    // Redirect admin users to admin page - they shouldn't access hours registration
+    if (user?.role === 'admin') {
+      router.push("/admin")
+    }
   }, [user, router])
 
   if (user?.isFirstLogin) {
+    return null
+  }
+
+  // Prevent admin users from accessing this page
+  if (user?.role === 'admin') {
     return null
   }
 
