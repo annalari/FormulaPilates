@@ -1,42 +1,36 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card } from "./ui/card"
 import { useSimpleStore } from "@/lib/simpleStore"
 import { Button } from "./ui/button"
-import { Calendar } from "./ui/calendar"
-import { Label } from "./ui/label"
 import { Alert } from "./ui/alert"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
-import { formatDate, formatTime, formatCurrency, isValidDate, type WorkLog, type Experimental } from "@/lib/timeUtils"
+import { formatDate, formatTime, isValidDate, type WorkLog, type Experimental } from "@/lib/timeUtils"
 import { generatePDF } from "@/lib/pdfUtils"
+import { Calendar } from "./ui/calendar"
+import { DateRange } from "react-day-picker"
 
 export function ReportSheet() {
   const workLogs = useSimpleStore((state) => state.workLogs)
   const experimentals = useSimpleStore((state) => state.experimentals)
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
   const [error, setError] = useState("")
   const [filteredLogs, setFilteredLogs] = useState<WorkLog[]>([])
   const [filteredExperimentals, setFilteredExperimentals] = useState<Experimental[]>([])
   const [showReport, setShowReport] = useState(false)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
   const generateReport = () => {
-    if (!startDate || !endDate || !isValidDate(startDate) || !isValidDate(endDate)) {
-      setError("Por favor, selecione datas válidas para o período.")
-      return
-    }
-
-    if (endDate < startDate) {
-      setError("A data final deve ser posterior à data inicial.")
+    if (!dateRange?.from || !dateRange?.to || !isValidDate(dateRange.from) || !isValidDate(dateRange.to)) {
+      setError("Por favor, selecione um período válido.")
       return
     }
 
     // Normalize dates to start and end of day
-    const start = new Date(startDate)
+    const start = new Date(dateRange.from)
     start.setHours(0, 0, 0, 0)
-    
-    const end = new Date(endDate)
+
+    const end = new Date(dateRange.to)
     end.setHours(23, 59, 59, 999)
 
     const filtered = workLogs.filter((log) => {
@@ -68,57 +62,36 @@ export function ReportSheet() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <Card className="p-6 shadow-md hover:shadow-lg transition-shadow">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Gerar Relatório</h2>
-        <div className="space-y-2">
-          <Label className="text-gray-700 text-center block">Selecione o Período</Label>
-          <div className="rounded-lg border shadow-sm p-3 bg-white flex justify-center">
-            <Calendar
-              mode="range"
-              selected={{
-                from: startDate,
-                to: endDate
-              }}
-              onSelect={(range) => {
-                setStartDate(range?.from)
-                setEndDate(range?.to)
-              }}
-              numberOfMonths={1}
-              className="rounded-md"
-              modifiers={{
-                today: new Date()
-              }}
-              modifiersStyles={{
-                today: {
-                  fontWeight: "bold",
-                  backgroundColor: "#ffcdd2"
-                }
-              }}
-            />
-          </div>
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">Selecione o Período do Relatório</h2>
+        <div className="rounded-lg border shadow-sm p-3 bg-white flex justify-center mb-4">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={setDateRange}
+            numberOfMonths={1}
+            className="rounded-md"
+            modifiers={{
+              today: new Date()
+            }}
+            modifiersStyles={{
+              today: {
+                fontWeight: "bold",
+                backgroundColor: "#ffcdd2"
+              }
+            }}
+          />
         </div>
-        <div className="flex flex-wrap gap-2 mt-6">
-          <Button onClick={generateReport} className="w-full md:w-auto">
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            onClick={generateReport} 
+            className="w-full md:w-auto"
+            disabled={!dateRange?.from || !dateRange?.to}
+          >
             Gerar Relatório
           </Button>
-          {(startDate || endDate) && (
+          {showReport && dateRange?.from && dateRange?.to && (
             <Button 
-              variant="outline"
-              onClick={() => {
-                setStartDate(undefined)
-                setEndDate(undefined)
-                setShowReport(false)
-                setFilteredLogs([])
-                setFilteredExperimentals([])
-                setError("")
-              }}
-              className="w-full md:w-auto"
-            >
-              Limpar Filtro
-            </Button>
-          )}
-          {showReport && (
-            <Button 
-              onClick={() => generatePDF(filteredLogs, filteredExperimentals, startDate!, endDate!)}
+              onClick={() => generatePDF(filteredLogs, filteredExperimentals, dateRange.from!, dateRange.to!)}
               variant="outline"
               className="w-full md:w-auto"
             >
@@ -134,10 +107,10 @@ export function ReportSheet() {
         </Alert>
       )}
 
-      {showReport && (
+      {showReport && dateRange?.from && dateRange?.to && (
         <Card className="p-6 shadow-md hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold mb-6 text-gray-800" suppressHydrationWarning>
-            Relatório: {startDate && formatDate(startDate)} - {endDate && formatDate(endDate)}
+            Relatório: {formatDate(dateRange.from)} - {formatDate(dateRange.to)}
           </h2>
 
           <div className="space-y-8">
