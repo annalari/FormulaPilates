@@ -82,6 +82,7 @@ export const formatTime = (date: Date | null): string => {
 
 export type WorkLog = {
   id: string;
+  userId: string;
   date: Date;
   startTime: Date;
   endTime: Date;
