@@ -11,18 +11,19 @@ interface ClientWrapperProps {
 
 export function ClientWrapper({ children }: ClientWrapperProps) {
   const [hasMounted, setHasMounted] = useState(false)
-  const isHydrated = useSimpleStore((state) => state.isHydrated)
   const loadFromStorage = useSimpleStore((state) => state.loadFromStorage)
   const user = useAuth((state) => state.user)
   const isAuthenticated = useAuth((state) => state.isAuthenticated)
+  const initializeAuth = useAuth((state) => state.initializeAuth)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     setHasMounted(true)
-    // Load data from localStorage after mounting
+    // Initialize stores
     loadFromStorage()
-  }, [loadFromStorage])
+    initializeAuth()
+  }, [loadFromStorage, initializeAuth])
 
   useEffect(() => {
     if (!hasMounted) return
@@ -41,7 +42,7 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
     }
   }, [isAuthenticated, user, pathname, router, hasMounted])
 
-  if (!hasMounted || !isHydrated) {
+  if (!hasMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

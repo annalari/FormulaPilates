@@ -52,7 +52,10 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
   setHydrated: () => set({ isHydrated: true }),
   
   loadFromStorage: () => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {
+      set({ isHydrated: true })
+      return
+    }
     
     console.log('loadFromStorage called')
     
@@ -109,7 +112,12 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
       })
     } catch (error) {
       console.error('Error loading from storage:', error)
-      set({ isHydrated: true })
+      // Always set hydrated to true even if there's an error
+      set({ 
+        workLogs: [],
+        experimentals: [],
+        isHydrated: true 
+      })
     }
   },
   

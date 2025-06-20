@@ -55,14 +55,16 @@ export function Header() {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/" className="hover:opacity-80 transition-opacity">
-            <Image
-              src="/formula-pilates-logo.png"
-              alt="Fórmula Pilates & Fitness"
-              width={200}
-              height={60}
-              className="h-12 w-[200px]"
-              priority
-            />
+            <div className="h-12 relative">
+              <Image
+                src="/formula-pilates-logo.png"
+                alt="Fórmula Pilates & Fitness"
+                width={200}
+                height={60}
+                style={{ height: '100%', width: 'auto' }}
+                priority
+              />
+            </div>
           </Link>
           <div className="hidden lg:block ml-4">
             <Link href="/">
@@ -78,7 +80,7 @@ export function Header() {
           {user?.role === 'admin' && (
             <Link href="/admin">
               <Button variant="ghost" className="text-white hover:text-red-400">
-                Gerenciar Usuários
+                Gerenciar Funcionários
               </Button>
             </Link>
           )}
@@ -137,7 +139,7 @@ export function Header() {
                 {user?.role === 'admin' && (
                   <Link href="/admin" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start text-white hover:text-red-400">
-                      Gerenciar Usuários
+                      Gerenciar Funcionários
                     </Button>
                   </Link>
                 )}

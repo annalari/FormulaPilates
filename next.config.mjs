@@ -2,15 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-  // Ensure static files are served correctly
-  async rewrites() {
-    return [
-      {
-        source: '/sw.js',
-        destination: '/public/sw.js',
-      },
-    ]
-  },
   // Add proper headers for PWA assets
   async headers() {
     return [
