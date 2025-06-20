@@ -64,9 +64,11 @@ export const formatCurrency = (amount: number): string => {
 
 export const formatDate = (date: Date | null): string => {
   if (!isValidDate(date)) return "--/--/----";
-  return new Intl.DateTimeFormat("pt-PT", {
-    dateStyle: "medium"
-  }).format(date!);
+  // Format date as dd/mm/yyyy
+  const day = date!.getDate().toString().padStart(2, '0');
+  const month = (date!.getMonth() + 1).toString().padStart(2, '0');
+  const year = date!.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
 export const formatTime = (date: Date | null): string => {
