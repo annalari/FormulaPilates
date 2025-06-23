@@ -1,10 +1,12 @@
 import { create } from 'zustand'
+import { generateNewUserEmailTemplate } from '@/app/api/send-email/route'
 
 interface User {
   id: string
   email: string
   role: 'admin' | 'user'
   isFirstLogin: boolean
+  isActive: boolean // New field to track activation status
 }
 
 interface AuthState {
@@ -29,19 +31,29 @@ const USERS: User[] = [
     id: '1',
     email: 'admin@formula.com',
     role: 'admin',
-    isFirstLogin: false
+    isFirstLogin: false,
+    isActive: true
   },
   {
     id: '2',
     email: 'funcionario1@formula.com',
     role: 'user',
-    isFirstLogin: false
+    isFirstLogin: false,
+    isActive: true
   },
   {
     id: '3',
     email: 'funcionario2@formula.com',
     role: 'user',
-    isFirstLogin: true
+    isFirstLogin: true,
+    isActive: false // Inactive until first login and password change
+  },
+  {
+    id: '4',
+    email: 'annalarissa.mmm@gmail.com',
+    role: 'user',
+    isFirstLogin: false,
+    isActive: true
   }
 ]
 
@@ -49,7 +61,8 @@ const USERS: User[] = [
 const PASSWORDS: { [key: string]: string } = {
   'admin@formula.com': 'admin123',
   'funcionario1@formula.com': 'func123',
-  'funcionario2@formula.com': 'changeme123'
+  'funcionario2@formula.com': 'changeme123',
+  'annalarissa.mmm@gmail.com': 'test123'
 }
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -125,9 +138,11 @@ export const useAuth = create<AuthState>((set, get) => ({
         isLoading: false
       })
       
-      // Save auth state to localStorage
+      // Save auth state to localStorage and cookies
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth', JSON.stringify({ user }))
+        // Set cookie for middleware access
+        document.cookie = `auth=${JSON.stringify({ user })}; path=/; max-age=${7 * 24 * 60 * 60}` // 7 days
       }
     } catch (error) {
       set({ isLoading: false })
@@ -141,9 +156,11 @@ export const useAuth = create<AuthState>((set, get) => ({
       isAuthenticated: false
     })
     
-    // Clear auth state from localStorage
+    // Clear auth state from localStorage and cookies
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth')
+      // Clear cookie
+      document.cookie = 'auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     }
   },
 
@@ -165,11 +182,22 @@ export const useAuth = create<AuthState>((set, get) => ({
       // Update password in our simulated storage
       PASSWORDS[user.email] = newPassword
       
-      // Update first login status
+      // Update first login status AND activate the user
       const userIndex = USERS.findIndex(u => u.id === user.id)
       if (userIndex >= 0) {
-        USERS[userIndex] = { ...user, isFirstLogin: false }
+        USERS[userIndex] = { 
+          ...user, 
+          isFirstLogin: false,
+          isActive: true // User becomes active after setting new password
+        }
         set({ user: USERS[userIndex] })
+        
+        // Update localStorage and cookies with new user state
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth', JSON.stringify({ user: USERS[userIndex] }))
+          // Update cookie for middleware access
+          document.cookie = `auth=${JSON.stringify({ user: USERS[userIndex] })}; path=/; max-age=${7 * 24 * 60 * 60}` // 7 days
+        }
       }
     } catch (error) {
       throw new Error('Failed to update password')
@@ -183,30 +211,43 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
       // Check if user already exists
       if (USERS.some(u => u.email === email)) {
         throw new Error('User already exists')
       }
       
-      // Create new user with temporary password
+      // Create new user with temporary password - INACTIVE until first login
       const newUser: User = {
         id: Date.now().toString(),
         email,
         role: 'user',
-        isFirstLogin: true
+        isFirstLogin: true,
+        isActive: false // New users start as inactive
       }
       
-      USERS.push(newUser)
+      // Generate a more secure temporary password
+      const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10)
       
-      // Set temporary password
-      const tempPassword = 'changeme123'
+      // Add user to our simulated database
+      USERS.push(newUser)
       PASSWORDS[email] = tempPassword
       
-      // Here you would typically send an email with the temporary password
-      console.log(`New user created: ${email} with temporary password: ${tempPassword}`)
+      // Send welcome email with credentials
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: 'Bem-vindo ao Formula Pilates - Suas Credenciais de Acesso',
+          ...generateNewUserEmailTemplate(email, tempPassword)
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to send welcome email')
+      }
     } catch (error) {
       throw error
     }

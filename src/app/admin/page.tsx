@@ -103,7 +103,7 @@ export default function AdminPage() {
     return total + funcionario.monthlyEarnings
   }, 0)
 
-  const activeFuncionarios = funcionariosWithEarnings.filter(f => !f.isFirstLogin)
+  const activeFuncionarios = funcionariosWithEarnings.filter(f => f.isActive)
 
   if (!user || user.role !== 'admin') {
     return null
@@ -256,11 +256,11 @@ export default function AdminPage() {
                         </td>
                         <td className="py-4 px-4">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            funcionario.isFirstLogin 
+                            !funcionario.isActive 
                               ? 'bg-yellow-100 text-yellow-800' 
                               : 'bg-green-100 text-green-800'
                           }`}>
-                            {funcionario.isFirstLogin ? "Pendente" : "Ativo"}
+                            {!funcionario.isActive ? "Pendente" : "Ativo"}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-right">
@@ -325,11 +325,11 @@ export default function AdminPage() {
                       <div>
                         <p className="text-sm text-gray-600">Status</p>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          funcionario.isFirstLogin 
+                          !funcionario.isActive 
                             ? 'bg-yellow-100 text-yellow-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {funcionario.isFirstLogin ? "Pendente" : "Ativo"}
+                          {!funcionario.isActive ? "Pendente" : "Ativo"}
                         </span>
                       </div>
                       <div className="text-right">
