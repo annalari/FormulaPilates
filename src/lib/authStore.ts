@@ -317,15 +317,22 @@ export const useAuth = create<AuthState>((set, get) => ({
   }
 }))
 
-// Initialize auth state from localStorage
-if (typeof window !== 'undefined') {
-  const stored = localStorage.getItem('auth')
-  if (stored) {
-    try {
-      const { user } = JSON.parse(stored)
-      useAuth.getState().setUser(user)
-    } catch (error) {
-      console.error('Failed to restore auth state:', error)
+// Initialize auth state from localStorage on client side only
+const initializeAuth = () => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('auth')
+    if (stored) {
+      try {
+        const { user } = JSON.parse(stored)
+        useAuth.getState().setUser(user)
+      } catch (error) {
+        console.error('Failed to restore auth state:', error)
+      }
     }
   }
+}
+
+// Call initialization after a delay to prevent hydration issues
+if (typeof window !== 'undefined') {
+  setTimeout(initializeAuth, 0)
 }

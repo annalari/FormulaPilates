@@ -2,13 +2,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // For client-side authentication, we'll let the client handle redirects
-  // This middleware will only handle static file serving
-  const isLoginPage = request.nextUrl.pathname === '/login'
-  const isChangePasswordPage = request.nextUrl.pathname === '/change-password'
-  const isPublicPath = isLoginPage || isChangePasswordPage
+  // Skip middleware for static assets and API routes
+  if (
+    request.nextUrl.pathname.startsWith('/_next') ||
+    request.nextUrl.pathname.startsWith('/api') ||
+    request.nextUrl.pathname.includes('.')
+  ) {
+    return NextResponse.next()
+  }
 
-  // Allow all requests to pass through - authentication will be handled client-side
+  // Allow all other requests to pass through
   return NextResponse.next()
 }
 
@@ -20,8 +23,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }

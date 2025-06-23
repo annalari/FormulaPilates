@@ -19,9 +19,12 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
   const pathname = usePathname()
 
   useEffect(() => {
-    setHasMounted(true)
-    // Load data from localStorage after mounting
-    loadFromStorage()
+    // Delay hydration to ensure proper client-side initialization
+    const timer = setTimeout(() => {
+      setHasMounted(true)
+      loadFromStorage()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [loadFromStorage])
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export function ClientWrapper({ children }: ClientWrapperProps) {
     }
   }, [isAuthenticated, user, pathname, router, hasMounted])
 
-  if (!hasMounted || !isHydrated) {
+  if (!hasMounted) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

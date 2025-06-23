@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  output: 'standalone',
+  reactStrictMode: false, // Disable strict mode to prevent double rendering
+  swcMinify: true,
+  experimental: {
+    optimizePackageImports: ['@radix-ui/react-icons'],
+  },
   // Ensure static files are served correctly
   async rewrites() {
     return [
@@ -41,15 +44,37 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:path*',
+        source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=3600',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
     ]
+  },
+  webpack: (config, { dev, isServer }) => {
+    // Optimize chunk splitting
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            priority: -10,
+            chunks: 'all',
+          },
+        },
+      }
+    }
+    return config
   },
 }
 
