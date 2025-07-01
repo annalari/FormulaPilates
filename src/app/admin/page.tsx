@@ -99,12 +99,11 @@ export default function AdminPage() {
     }
   }
 
-  // Include all funcionarios with monthly earnings, regardless of isActive status
-  const activeFuncionarios = funcionariosWithEarnings.filter(f => f.isActive || f.monthlyEarnings > 0)
-
-  const totalMonthlyEarnings = activeFuncionarios.reduce((total, funcionario) => {
+  const totalMonthlyEarnings = funcionariosWithEarnings.reduce((total, funcionario) => {
     return total + funcionario.monthlyEarnings
   }, 0)
+
+  const activeFuncionarios = funcionariosWithEarnings.filter(f => !f.isFirstLogin)
 
   if (!user || user.role !== 'admin') {
     return null
@@ -257,11 +256,11 @@ export default function AdminPage() {
                         </td>
                         <td className="py-4 px-4">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            !funcionario.isActive 
+                            funcionario.isFirstLogin 
                               ? 'bg-yellow-100 text-yellow-800' 
                               : 'bg-green-100 text-green-800'
                           }`}>
-                            {!funcionario.isActive ? "Pendente" : "Ativo"}
+                            {funcionario.isFirstLogin ? "Pendente" : "Ativo"}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-right">
@@ -326,11 +325,11 @@ export default function AdminPage() {
                       <div>
                         <p className="text-sm text-gray-600">Status</p>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          !funcionario.isActive 
+                          funcionario.isFirstLogin 
                             ? 'bg-yellow-100 text-yellow-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {!funcionario.isActive ? "Pendente" : "Ativo"}
+                          {funcionario.isFirstLogin ? "Pendente" : "Ativo"}
                         </span>
                       </div>
                       <div className="text-right">

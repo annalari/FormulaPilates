@@ -42,9 +42,8 @@ export default function ChangePasswordPage() {
     
     try {
       await updatePassword(newPassword)
-      // Remove or keep toast here if desired, but main message will be on login page
-      // toast.success("Senha alterada com sucesso!")
-      router.push("/login?message=senha_alterada")
+      toast.success("Senha alterada com sucesso!")
+      router.push("/")
     } catch (error) {
       toast.error("Erro ao alterar a senha. Tente novamente.")
     } finally {

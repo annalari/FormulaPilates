@@ -71,8 +71,7 @@ const loadFromStorage = (key: string) => {
             if (key === 'workLogs' && Array.isArray(parsedData)) {
               parsedData = parsedData.map((log: any) => ({
                 ...log,
-                // TODO: Improve this to assign correct userId based on email or other data
-                userId: log.userId || null,
+                userId: log.userId || '2', // Default to funcionario1's ID
                 date: new Date(log.date),
                 startTime: new Date(log.startTime),
                 endTime: new Date(log.endTime)
@@ -168,13 +167,6 @@ export const useSimpleStore = create<State & Actions>((set, get) => ({
   
   addWorkLog: (log: WorkLog) => {
     set((state) => {
-      // Ensure userId is set on new work log
-      if (!log.userId) {
-        const currentUser = state.user
-        if (currentUser) {
-          log.userId = currentUser.id
-        }
-      }
       const newWorkLogs = [...state.workLogs, log]
       saveToStorage('workLogs', newWorkLogs)
       return { workLogs: newWorkLogs, isHydrated: true }

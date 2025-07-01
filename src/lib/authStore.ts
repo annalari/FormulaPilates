@@ -1,12 +1,10 @@
 import { create } from 'zustand'
-import { generateNewUserEmailTemplate } from '@/app/api/send-email/route'
 
 interface User {
   id: string
   email: string
   role: 'admin' | 'user'
   isFirstLogin: boolean
-  isActive: boolean // New field to track activation status
 }
 
 interface AuthState {
@@ -25,68 +23,33 @@ interface AuthState {
   calculateUserMonthlyEarnings: (userId: string) => number // Admin only - Calculate user's monthly earnings
 }
 
-const USERS_STORAGE_KEY = 'formula-pilates-users-v1'
-
 // Simulated users database (replace with real backend later)
-// Load from localStorage or fallback to default
-const defaultUsers: User[] = [
+const USERS: User[] = [
   {
     id: '1',
     email: 'admin@formula.com',
     role: 'admin',
-    isFirstLogin: false,
-    isActive: true
+    isFirstLogin: false
   },
   {
     id: '2',
     email: 'funcionario1@formula.com',
     role: 'user',
-    isFirstLogin: false,
-    isActive: true
+    isFirstLogin: false
   },
   {
     id: '3',
     email: 'funcionario2@formula.com',
     role: 'user',
-    isFirstLogin: true,
-    isActive: false // Inactive until first login and password change
-  },
-  {
-    id: '4',
-    email: 'annalarissa.mmm@gmail.com',
-    role: 'user',
-    isFirstLogin: false,
-    isActive: true
+    isFirstLogin: true
   }
 ]
-
-let USERS: User[] = []
-
-// Load users from localStorage on initialization
-if (typeof window !== 'undefined') {
-  const storedUsers = localStorage.getItem(USERS_STORAGE_KEY)
-  if (storedUsers) {
-    try {
-      console.log('Loading users from localStorage')
-      USERS = JSON.parse(storedUsers)
-      console.log('Loaded users:', USERS)
-    } catch (error) {
-      console.error('Failed to parse users from localStorage:', error)
-      USERS = defaultUsers
-      console.log('Falling back to default users')
-    }
-  } else {
-    USERS = defaultUsers
-    console.log('No users in localStorage, using default users')
-  }
-}
 
 // Simulated password storage (replace with real backend later)
 const PASSWORDS: { [key: string]: string } = {
   'admin@formula.com': 'admin123',
   'funcionario1@formula.com': 'func123',
-  'funcionario2@formula.com': 'changeme123',
-  'annalarissa.mmm@gmail.com': 'test123'
+  'funcionario2@formula.com': 'changeme123'
 }
 
 export const useAuth = create<AuthState>((set, get) => ({
@@ -124,62 +87,6 @@ export const useAuth = create<AuthState>((set, get) => ({
       // Remove user from arrays
       USERS.splice(userIndex, 1)
       delete PASSWORDS[userEmail]
-
-      // Persist updated users list
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(USERS))
-        } catch (error) {
-          console.error('Failed to persist users after deletion:', error)
-        }
-      }
-
-      // Remove user's work logs and experimentals from localStorage
-      if (typeof window !== 'undefined') {
-        const STORAGE_VERSION = '2.0.0'
-        const STORAGE_PREFIX = 'formula-pilates'
-        const workLogsKey = `${STORAGE_PREFIX}-workLogs-v${STORAGE_VERSION}`
-        const experimentalsKey = `${STORAGE_PREFIX}-experimentals-v${STORAGE_VERSION}`
-
-        // Remove work logs
-        const allWorkLogsRaw = localStorage.getItem(workLogsKey)
-        if (allWorkLogsRaw) {
-          try {
-            const allWorkLogs = JSON.parse(allWorkLogsRaw)
-            const filteredLogs = allWorkLogs.filter((log: any) => log.userId !== userId)
-            localStorage.setItem(workLogsKey, JSON.stringify(filteredLogs))
-          } catch (error) {
-            console.error('Failed to remove user work logs:', error)
-          }
-        }
-
-        // Remove experimentals
-        const allExperimentalsRaw = localStorage.getItem(experimentalsKey)
-        if (allExperimentalsRaw) {
-          try {
-            const allExperimentals = JSON.parse(allExperimentalsRaw)
-            const filteredExperimentals = allExperimentals.filter((exp: any) => exp.userId !== userId)
-            localStorage.setItem(experimentalsKey, JSON.stringify(filteredExperimentals))
-          } catch (error) {
-            console.error('Failed to remove user experimentals:', error)
-          }
-        }
-      }
-
-      // Clear auth state if it belongs to deleted user
-      if (typeof window !== 'undefined') {
-        const authRaw = localStorage.getItem('auth')
-        if (authRaw) {
-          try {
-            const authData = JSON.parse(authRaw)
-            if (authData.user && authData.user.id === userId) {
-              localStorage.removeItem('auth')
-            }
-          } catch (error) {
-            console.error('Failed to clear auth state for deleted user:', error)
-          }
-        }
-      }
     } catch (error) {
       throw error
     }
@@ -218,11 +125,9 @@ export const useAuth = create<AuthState>((set, get) => ({
         isLoading: false
       })
       
-      // Save auth state to localStorage and cookies
+      // Save auth state to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('auth', JSON.stringify({ user }))
-        // Set cookie for middleware access
-        document.cookie = `auth=${JSON.stringify({ user })}; path=/; max-age=${7 * 24 * 60 * 60}` // 7 days
       }
     } catch (error) {
       set({ isLoading: false })
@@ -236,11 +141,9 @@ export const useAuth = create<AuthState>((set, get) => ({
       isAuthenticated: false
     })
     
-    // Clear auth state from localStorage and cookies
+    // Clear auth state from localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth')
-      // Clear cookie
-      document.cookie = 'auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     }
   },
 
@@ -262,22 +165,11 @@ export const useAuth = create<AuthState>((set, get) => ({
       // Update password in our simulated storage
       PASSWORDS[user.email] = newPassword
       
-      // Update first login status AND activate the user
+      // Update first login status
       const userIndex = USERS.findIndex(u => u.id === user.id)
       if (userIndex >= 0) {
-        USERS[userIndex] = { 
-          ...user, 
-          isFirstLogin: false,
-          isActive: true // User becomes active after setting new password
-        }
+        USERS[userIndex] = { ...user, isFirstLogin: false }
         set({ user: USERS[userIndex] })
-        
-        // Update localStorage and cookies with new user state
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('auth', JSON.stringify({ user: USERS[userIndex] }))
-          // Update cookie for middleware access
-          document.cookie = `auth=${JSON.stringify({ user: USERS[userIndex] })}; path=/; max-age=${7 * 24 * 60 * 60}` // 7 days
-        }
       }
     } catch (error) {
       throw new Error('Failed to update password')
@@ -291,52 +183,30 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
     
     try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       // Check if user already exists
       if (USERS.some(u => u.email === email)) {
         throw new Error('User already exists')
       }
       
-      // Create new user with temporary password - INACTIVE until first login
+      // Create new user with temporary password
       const newUser: User = {
         id: Date.now().toString(),
         email,
         role: 'user',
-        isFirstLogin: true,
-        isActive: false // New users start as inactive
+        isFirstLogin: true
       }
       
-      // Generate a more secure temporary password
-      const tempPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10)
-      
-      // Add user to our simulated database
       USERS.push(newUser)
-      PASSWORDS[email] = tempPassword
-
-      // Persist updated users list
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(USERS))
-        } catch (error) {
-          console.error('Failed to persist users after creation:', error)
-        }
-      }
       
-      // Send welcome email with credentials
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: 'Bem-vindo ao Formula Pilates - Suas Credenciais de Acesso',
-          ...generateNewUserEmailTemplate(email, tempPassword)
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to send welcome email')
-      }
+      // Set temporary password
+      const tempPassword = 'changeme123'
+      PASSWORDS[email] = tempPassword
+      
+      // Here you would typically send an email with the temporary password
+      console.log(`New user created: ${email} with temporary password: ${tempPassword}`)
     } catch (error) {
       throw error
     }

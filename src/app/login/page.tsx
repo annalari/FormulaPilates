@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import Image from "next/image"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/authStore"
 
 export default function LoginPage() {
@@ -16,16 +16,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const login = useAuth((state) => state.login)
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    const message = searchParams.get("message")
-    if (message === "senha_alterada") {
-      toast.success("Agora você pode se autenticart com sua nova senha")
-      // Optionally, remove the query param from URL after showing toast
-      router.replace("/login")
-    }
-  }, [searchParams, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
