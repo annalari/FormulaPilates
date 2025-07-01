@@ -199,7 +199,7 @@ export default function Home() {
         </Card>
         <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
           <h3 className="text-lg font-medium mb-2">Ganhos do Mês</h3>
-          <p className="text-3xl font-bold text-gray-900">{formatCurrency(monthEarnings)}</p>
+          <p className="text-3xl font-bold text-gray-900 break-words max-w-full">{formatCurrency(monthEarnings)}</p>
         </Card>
       </div>
 

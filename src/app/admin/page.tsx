@@ -99,11 +99,12 @@ export default function AdminPage() {
     }
   }
 
-  const totalMonthlyEarnings = funcionariosWithEarnings.reduce((total, funcionario) => {
+  // Include all funcionarios with monthly earnings, regardless of isActive status
+  const activeFuncionarios = funcionariosWithEarnings.filter(f => f.isActive || f.monthlyEarnings > 0)
+
+  const totalMonthlyEarnings = activeFuncionarios.reduce((total, funcionario) => {
     return total + funcionario.monthlyEarnings
   }, 0)
-
-  const activeFuncionarios = funcionariosWithEarnings.filter(f => f.isActive)
 
   if (!user || user.role !== 'admin') {
     return null

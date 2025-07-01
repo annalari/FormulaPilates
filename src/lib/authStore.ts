@@ -25,8 +25,11 @@ interface AuthState {
   calculateUserMonthlyEarnings: (userId: string) => number // Admin only - Calculate user's monthly earnings
 }
 
+const USERS_STORAGE_KEY = 'formula-pilates-users-v1'
+
 // Simulated users database (replace with real backend later)
-const USERS: User[] = [
+// Load from localStorage or fallback to default
+const defaultUsers: User[] = [
   {
     id: '1',
     email: 'admin@formula.com',
@@ -56,6 +59,27 @@ const USERS: User[] = [
     isActive: true
   }
 ]
+
+let USERS: User[] = []
+
+// Load users from localStorage on initialization
+if (typeof window !== 'undefined') {
+  const storedUsers = localStorage.getItem(USERS_STORAGE_KEY)
+  if (storedUsers) {
+    try {
+      console.log('Loading users from localStorage')
+      USERS = JSON.parse(storedUsers)
+      console.log('Loaded users:', USERS)
+    } catch (error) {
+      console.error('Failed to parse users from localStorage:', error)
+      USERS = defaultUsers
+      console.log('Falling back to default users')
+    }
+  } else {
+    USERS = defaultUsers
+    console.log('No users in localStorage, using default users')
+  }
+}
 
 // Simulated password storage (replace with real backend later)
 const PASSWORDS: { [key: string]: string } = {
@@ -100,6 +124,62 @@ export const useAuth = create<AuthState>((set, get) => ({
       // Remove user from arrays
       USERS.splice(userIndex, 1)
       delete PASSWORDS[userEmail]
+
+      // Persist updated users list
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(USERS))
+        } catch (error) {
+          console.error('Failed to persist users after deletion:', error)
+        }
+      }
+
+      // Remove user's work logs and experimentals from localStorage
+      if (typeof window !== 'undefined') {
+        const STORAGE_VERSION = '2.0.0'
+        const STORAGE_PREFIX = 'formula-pilates'
+        const workLogsKey = `${STORAGE_PREFIX}-workLogs-v${STORAGE_VERSION}`
+        const experimentalsKey = `${STORAGE_PREFIX}-experimentals-v${STORAGE_VERSION}`
+
+        // Remove work logs
+        const allWorkLogsRaw = localStorage.getItem(workLogsKey)
+        if (allWorkLogsRaw) {
+          try {
+            const allWorkLogs = JSON.parse(allWorkLogsRaw)
+            const filteredLogs = allWorkLogs.filter((log: any) => log.userId !== userId)
+            localStorage.setItem(workLogsKey, JSON.stringify(filteredLogs))
+          } catch (error) {
+            console.error('Failed to remove user work logs:', error)
+          }
+        }
+
+        // Remove experimentals
+        const allExperimentalsRaw = localStorage.getItem(experimentalsKey)
+        if (allExperimentalsRaw) {
+          try {
+            const allExperimentals = JSON.parse(allExperimentalsRaw)
+            const filteredExperimentals = allExperimentals.filter((exp: any) => exp.userId !== userId)
+            localStorage.setItem(experimentalsKey, JSON.stringify(filteredExperimentals))
+          } catch (error) {
+            console.error('Failed to remove user experimentals:', error)
+          }
+        }
+      }
+
+      // Clear auth state if it belongs to deleted user
+      if (typeof window !== 'undefined') {
+        const authRaw = localStorage.getItem('auth')
+        if (authRaw) {
+          try {
+            const authData = JSON.parse(authRaw)
+            if (authData.user && authData.user.id === userId) {
+              localStorage.removeItem('auth')
+            }
+          } catch (error) {
+            console.error('Failed to clear auth state for deleted user:', error)
+          }
+        }
+      }
     } catch (error) {
       throw error
     }
@@ -231,6 +311,15 @@ export const useAuth = create<AuthState>((set, get) => ({
       // Add user to our simulated database
       USERS.push(newUser)
       PASSWORDS[email] = tempPassword
+
+      // Persist updated users list
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(USERS))
+        } catch (error) {
+          console.error('Failed to persist users after creation:', error)
+        }
+      }
       
       // Send welcome email with credentials
       const response = await fetch('/api/send-email', {
